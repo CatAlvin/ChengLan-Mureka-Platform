@@ -1,5 +1,7 @@
 # 橙蓝 AI 音乐工作台
 
+[![构建、测试与评估](https://github.com/CatAlvin/ChengLan-Mureka-Platform/actions/workflows/verify.yml/badge.svg)](https://github.com/CatAlvin/ChengLan-Mureka-Platform/actions/workflows/verify.yml)
+
 [English](README.md) · [在线演示与试听](https://chenglan-mureka-platform.chenglan.tech/demo) · [评估方法](docs/EVALUATION.md) · [需求规格](spec/README.md)
 
 基于 Mureka API 的音乐创作平台。用户可以从提示词、歌词或纯音乐想法开始，生成后在同一工作区试听、裁剪、续写、局部改编、分轨、查看歌词与乐谱，并整理自己的作品。前端采用 React 与 TypeScript，服务端使用 Fastify、SQLite 和 FFmpeg；桌面与手机均可使用。

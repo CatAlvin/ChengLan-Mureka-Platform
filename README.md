@@ -2,6 +2,8 @@
 
 <p align="center"><b>A music creation workspace built around the Mureka API.</b><br>React · TypeScript · Fastify · SQLite · FFmpeg</p>
 
+<p align="center"><a href="https://github.com/CatAlvin/ChengLan-Mureka-Platform/actions/workflows/verify.yml"><img src="https://github.com/CatAlvin/ChengLan-Mureka-Platform/actions/workflows/verify.yml/badge.svg" alt="Build, tests and evaluation"></a></p>
+
 <p align="center"><a href="README.zh-CN.md">简体中文</a> · <a href="https://chenglan-mureka-platform.chenglan.tech/demo">Live demo & music</a> · <a href="docs/EVALUATION.md">Evaluation</a> · <a href="spec/README.md">Specifications</a></p>
 
 ChengLan Music Studio turns a prompt, lyrics or an instrumental idea into a saved music project. It connects generation with the work people do afterward: previewing versions, selecting a passage, editing or extending a song, separating stems, reading lyrics and scores, and keeping every artifact in a private library. The browser interface works on desktop and mobile.
