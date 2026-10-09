@@ -1,0 +1,28 @@
+// Isolated browser-test fixture. It never reads the user's key or calls Mureka.
+import { mkdtemp } from 'node:fs/promises';
+import path from 'node:path';
+import { trimAudioEnd } from '../apps/server/src/postprocess.js';
+import { buildApp } from '../apps/server/src/app.js';
+import { testCredentials, FakeProvider, fakeDownload, fakeArchiveDownload, sampleJob, testWav } from './helpers.js';
+import { randomUUID } from 'node:crypto';
+import { writeFile } from 'node:fs/promises';
+import { importMaterial } from '../apps/server/src/materials.js';
+import { createHash } from 'node:crypto';
+const root = process.cwd();
+const port = Number(process.env.UI_PORT || 4174);
+const seconds = process.env.UI_V06 === '1' ? 20 : 8;
+const dataDir = await mkdtemp(path.join(root, 'data', 'ui-fixture-'));
+let failFirstSave = process.env.UI_SAVE_FAILURE === '1';
+const { app, runner, store } = await buildApp({ root, bootstrap: testCredentials, port, dataDir, storageDir: path.join(dataDir, 'audio'), provider: new FakeProvider(), processor: async (...args) => { if (failFirstSave) { failFirstSave = false; throw new Error('Fixture save failure'); } return trimAudioEnd(...args); }, downloader: fakeDownload, archiveDownloader: fakeArchiveDownload });
+const job = sampleJob({ status: 'succeeded' }); store.createJob(job); const id = randomUUID();
+await writeFile(path.join(dataDir, 'audio', `${id}.wav`), testWav(seconds));
+store.addTrack({ id, jobId: job.id, providerId: 'fixture-original', title: '海边散步 · 工具体验', mode: 'easy', duration: 8000, processingVersion: failFirstSave ? 0 : 1, model: 'fixture', lyrics: '海风穿过窗台\n和你一起走向未来', lyricsSections: [{ lines: [{ text: '海风穿过窗台', start: 0, end: 3000 }, { text: '和你一起走向未来', start: 3000, end: 7000 }] }], createdAt: Date.now(), saveStatus: failFirstSave ? 'save_failed' : 'saved', url: 'https://example.com/fixture.wav', localFile: `${id}.wav`, contentType: 'audio/wav' });
+const materialId = randomUUID(); const bytes = testWav(40);
+const material = await importMaterial(bytes, '四十秒灵感旋律.wav', path.join(dataDir, 'audio'), materialId);
+store.addMaterial({ id: materialId, name: '四十秒灵感旋律.wav', ...material, checksum: createHash('sha256').update(bytes).digest('hex'), createdAt: Date.now(), deletedAt: null });
+await writeFile(path.join(root, 'data', 'ui-test-source.wav'), bytes);
+if (seconds !== 8) store.updateTrack(id, { duration: seconds * 1000 });
+await app.listen({ host: '127.0.0.1', port });
+runner.start();
+await runner.refreshAccount();
+console.log(`Isolated UI test: http://127.0.0.1:${port} · ${dataDir}`);

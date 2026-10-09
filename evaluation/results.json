@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-09",
+  "timezone": "Asia/Shanghai",
+  "environment": {
+    "node": "24.11.1",
+    "pnpm": "11.25.0",
+    "ffmpeg": "N-118038-g8629306627-20241210"
+  },
+  "regression": {
+    "testFiles": 13,
+    "testFilesPassed": 13,
+    "tests": 128,
+    "testsPassed": 128
+  },
+  "focusedEvaluation": {
+    "scope": "offline fixtures; no Mureka API calls",
+    "submitIdempotency": {
+      "repeatedRequests": 100,
+      "persistedJobs": 1,
+      "creditReservations": 1,
+      "conflictingReuseStatus": 409
+    },
+    "audioProcessing": {
+      "sourceMs": 8000,
+      "savedMs": 3000,
+      "removedMs": 5000,
+      "originalChecksumUnchanged": true
+    }
+  }
+}

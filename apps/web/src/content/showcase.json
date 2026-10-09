@@ -1,0 +1,33 @@
+[
+  {
+    "slug": "neon-after-rain",
+    "title": "雨后霓虹",
+    "model": "mureka-9.5",
+    "mode": "instrumental",
+    "durationMs": 204454,
+    "prompt": "Create a cinematic ambient instrumental for a rainy-night city short film.\n\nUse slow warm synth pads, delicate piano, deep reverb, and spacious atmospheric textures. The feeling should be dreamy, urban, nostalgic, peaceful, and slightly melancholic, like neon lights slowly drifting past a rain-covered car window at night.\n\nMost importantly, use ONE simple and memorable 4–8 note main melody throughout the entire track. Introduce it on piano, then repeat and subtly vary it with synths, echoes, different registers, and reharmonization. Do not introduce too many new melodies.\n\nTempo: 55–70 BPM.\n\nNo vocals, no strong drums, no pop beat, no dramatic climax.\n\nTitle: “Neon After Rain”",
+    "styles": [
+      "ambient",
+      "edm"
+    ],
+    "mood": "安静舒缓",
+    "language": "中文",
+    "gender": "auto",
+    "count": 1,
+    "lyricsAvailable": false
+  },
+  {
+    "slug": "anthem-of-life",
+    "title": "生命赞歌",
+    "model": "mureka-9.5",
+    "mode": "easy",
+    "durationMs": 237294,
+    "prompt": "Create an epic cinematic symphonic anthem celebrating the beauty of life, humanity, love, and the miracle of existence.\n\nThe song should feel like a sacred hymn and a timeless masterpiece, with a divine atmosphere similar to a grand orchestral film score. The emotion should rise from a gentle reflection on life into a powerful celebration of hope and human spirit.\n\nStyle:\nEpic orchestral, cinematic classical, sacred choir, inspirational anthem, symphonic masterpiece.\n\nInstrumentation:\nFull symphony orchestra with soaring string sections, powerful brass ensemble, majestic French horns, grand piano, timpani, deep percussion, orchestral drums, church organ, and a massive mixed choir.\n\nVocal style:\nA passionate and emotional lead vocal with a warm, powerful voice. The chorus should feature a huge multi-layered choir singing with unity and transcendence, creating a feeling of humanity standing together under the light.\n\nStructure:\n- Intro: peaceful and sacred atmosphere, soft piano, delicate strings, feeling of sunrise and the beginning of life.\n- Verse: emotional storytelling about the preciousness of existence, love, dreams, and the beauty of everyday moments.\n- Build-up: gradually increasing orchestration, rising strings, stronger percussion, creating anticipation.\n- Final Chorus: an overwhelming orchestral climax with a massive choir, powerful drums, soaring melodies, and a breathtaking symphonic explosion.\n- Ending: a glorious and emotional resolution, leaving a feeling of hope, eternity, and gratitude toward life.\n\nMood:\nSacred, majestic, emotional, uplifting, inspirational, universal, timeless.\n\nThe final result should feel like a song performed at a global celebration of humanity, a tribute to life itself, with a legendary and unforgettable climax.",
+    "styles": [],
+    "mood": "充满力量",
+    "language": "英文",
+    "gender": "auto",
+    "count": 1,
+    "lyricsAvailable": true
+  }
+]

@@ -1,0 +1,30 @@
+# Local credentials
+Mureka-API-Key.txt
+*-API-Key.txt
+.env
+.env.*
+!.env.example
+
+# Dependencies and build outputs
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# Local user data and logs
+data/
+storage/
+backups/
+logs/
+*.log
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.DS_Store
+Thumbs.db
+
+.pnpm-store/
+deployment-secrets/
+*.tar.gz
