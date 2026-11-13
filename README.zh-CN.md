@@ -12,6 +12,8 @@
 
 [公开演示空间](https://chenglan-mureka-platform.chenglan.tech/demo)展示了《雨后霓虹》和《生命赞歌》两首真实创作，可播放、查看当时的完整提示词和配置，并单独下载音频。《生命赞歌》还提供歌词 TXT 和同步 LRC。访客也能操作模拟创作、后续工具与管理界面，了解一次操作如何进入任务、保存作品和结算点数。
 
+新歌曲与纯音乐默认使用 **Mureka V9.5**，创作时仍可选择 V9 或 V8。整首重制也使用 V9.5，支持 10–480 秒音频，替换歌词可以留空。
+
 ![创作工作台桌面界面](docs/screenshots/studio-desktop.jpg)
 
 <p align="center"><img src="docs/screenshots/creative-tools-mobile.jpg" alt="手机上的后续创作工具" width="300"> <img src="docs/screenshots/v0.5.1-crop-mobile.png" alt="手机上的音频波形裁剪界面" width="300"></p>
@@ -20,7 +22,7 @@
 
 | 验证项目 | 本次结果 | 复现方式 |
 | :--- | ---: | :--- |
-| 自动化回归 | **13 组、128 项全部通过** | `pnpm test` |
+| 自动化回归 | **13 组、129 项全部通过** | `pnpm test` |
 | 相同提交标识重复请求 | **100 次请求只形成 1 个任务和 1 条额度预扣** | `pnpm eval` |
 | 音频保存处理 | **8 秒 WAV 处理为 3 秒**，原文件 SHA-256 不变 | `pnpm eval` |
 | 音频格式回归 | **WAV、MP3、FLAC、M4A 四种格式通过** | `tests/postprocess.test.ts` |

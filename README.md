@@ -12,6 +12,8 @@ ChengLan Music Studio turns a prompt, lyrics or an instrumental idea into a save
 
 The [public demo](https://chenglan-mureka-platform.chenglan.tech/demo) includes two complete tracks, **雨后霓虹 / Neon After Rain** and **生命赞歌 / Anthem of Life**. Both have playable audio and their original prompts and settings; the latter also has downloadable lyrics and a timed LRC file. The interactive creation and administration flows are safe local simulations, so visitors can explore without an account or an API key.
 
+New songs and instrumentals default to **Mureka V9.5**, with V9 and V8 available in the model picker. Full-song Remix also uses V9.5, accepts a 10–480 second source, and can work with optional replacement lyrics.
+
 <p align="center"><img src="docs/screenshots/studio-desktop.jpg" alt="Desktop creation workspace with mode selection, prompt input and idea cards" width="880"></p>
 
 <p align="center"><img src="docs/screenshots/creative-tools-mobile.jpg" alt="Mobile creative tools for revisiting a saved track" width="300"> <img src="docs/screenshots/v0.5.1-crop-mobile.png" alt="Mobile waveform selection and precise audio crop controls" width="300"></p>
@@ -20,7 +22,7 @@ The [public demo](https://chenglan-mureka-platform.chenglan.tech/demo) includes 
 
 | Check | Observed result | Reproduce |
 | :--- | ---: | :--- |
-| Automated regression | **128 / 128 tests** across **13 files** | `pnpm test` |
+| Automated regression | **129 / 129 tests** across **13 files** | `pnpm test` |
 | Same-ID submission replay | **100 requests → 1 job, 1 credit reservation** | `pnpm eval` |
 | Audio post-processing | **8,000 ms → 3,000 ms**, source SHA-256 unchanged | `pnpm eval` |
 | Format coverage | **4 / 4 formats**: WAV, MP3, FLAC, M4A | `tests/postprocess.test.ts` |

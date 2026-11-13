@@ -39,9 +39,11 @@ describe('creative tool contracts', () => {
     expect(toolRangeError({ ...edit, start: 0, end: 259950 }, 259950)).toContain('整首重制');
     expect(toolRangeError({ ...edit, start: 1000, end: 259000 }, 259950)).toContain('保留');
     const remix = toolInputSchema.parse({ ...base, operation: 'remix', lyrics: '歌'.repeat(5000), prompt: '古风男声' });
-    expect(toMurekaToolBody(remix, 'remix-upload')).toEqual({ upload_audio_id: 'remix-upload', lyrics: '歌'.repeat(5000), prompt: '古风男声', n: 1 });
-    expect(toolRangeError(remix, 10000)).toBeNull(); expect(toolRangeError(remix, 350000)).toBeNull();
-    expect(toolRangeError(remix, 9999)).toBeTruthy(); expect(toolRangeError(remix, 350001)).toBeTruthy();
+    if (remix.operation !== 'remix') throw new Error('Expected a remix');
+    expect(toMurekaToolBody(remix, 'remix-upload')).toEqual({ upload_audio_id: 'remix-upload', model: 'mureka-9.5', lyrics: '歌'.repeat(5000), prompt: '古风男声', n: 1 });
+    expect(toolRangeError(remix, 10000)).toBeNull(); expect(toolRangeError(remix, 480000)).toBeNull();
+    expect(toolRangeError(remix, 9999)).toBeTruthy(); expect(toolRangeError(remix, 480001)).toBeTruthy();
+    expect(toMurekaToolBody({ ...remix, lyrics: '' }, 'remix-upload')).toEqual({ upload_audio_id: 'remix-upload', model: 'mureka-9.5', prompt: '古风男声', n: 1 });
     expect(toolInputSchema.safeParse({ ...remix, lyrics: '歌'.repeat(5001) }).success).toBe(false);
     expect(toolInputSchema.safeParse({ ...remix, prompt: '' }).success).toBe(false);
     expect(toolInputSchema.safeParse({ ...remix, prompt: '曲'.repeat(1025) }).success).toBe(false);
@@ -58,7 +60,7 @@ describe('creative tool contracts', () => {
     expect((calls[0].init.body as FormData).get('purpose')).toBe('remix');
     await provider.createVersion({ operation: 'remix', sourceTrackId: randomUUID(), title: '', lyrics: '[Verse]\n整首新歌词', prompt: '古风男声' }, 'remix-upload');
     expect(calls[1].url).toBe('https://api.mureka.cn/v1/song/remix');
-    expect(JSON.parse(calls[1].init.body as string)).toEqual({ upload_audio_id: 'remix-upload', lyrics: '[Verse]\n整首新歌词', prompt: '古风男声', n: 1 });
+    expect(JSON.parse(calls[1].init.body as string)).toEqual({ upload_audio_id: 'remix-upload', model: 'mureka-9.5', lyrics: '[Verse]\n整首新歌词', prompt: '古风男声', n: 1 });
   });
   it('uses multipart audio uploads, exact endpoint bodies and private authorization', async () => {
     const calls: { url: string; init: RequestInit }[] = [];
@@ -148,7 +150,7 @@ describe('creative tools through the persistent queue', () => {
     expect(store.getTrack(version.id)).toMatchObject({ parentTrackId: id, operation: 'remix', title: '整首重制版', saveStatus: 'saved' });
     expect(store.getTrack(version.id)?.lyrics).toContain('完整新歌词'); expect(store.getJob(jobId)?.status).toBe('succeeded');
     await runner.tick(); expect(provider.toolCalls).toBe(1); expect(provider.submissions).toBe(0);
-    store.updateTrack(id, { mode: 'instrumental' }); expect((await post(tool)).statusCode).toBe(400);
+    store.updateTrack(id, { mode: 'instrumental' }); expect((await post({ ...tool, lyrics: '' })).statusCode).toBe(202);
   });
   it('uploads an old local song, creates a related version and keeps source audio and drafts intact', async () => {
     const { root, id, post, runner, store, provider, app, headers } = await setup();

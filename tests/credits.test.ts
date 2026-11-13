@@ -16,12 +16,15 @@ describe('points pricing and weekly calendar', () => {
     expect(new Date(creditWeek(Date.parse('2027-01-01T00:00:00Z')))).toEqual(new Date('2026-12-27T16:00:00Z'));
   });
   it('quotes all paid operations using verified China API rates, count and model', () => {
-    expect(quoteCredits('song', { mode: 'lyrics', count: 3 }).points).toBe(99);
+    expect(quoteCredits('song', { mode: 'lyrics', count: 3 }).points).toBe(300);
     expect(quoteCredits('instrumental', { mode: 'instrumental', count: 1 }, undefined, 'mureka-9').points).toBe(33);
-    expect(quoteCredits('song', { mode: 'easy', count: 1 }).points).toBe(200);
+    expect(quoteCredits('song', { mode: 'easy', count: 1 }).points).toBe(300);
+    expect(quoteCredits('song', { mode: 'easy', count: 1 }, undefined, 'mureka-9').points).toBe(200);
+    expect(quoteCredits('remix').points).toBe(300);
+    expect(quoteCredits('remix', undefined, undefined, 'mureka-8').points).toBe(150);
     expect(quoteCredits('song', { mode: 'lyrics', count: 1 }, undefined, 'future-model')).toMatchObject({ points: 20, uncertain: true, cents: null });
     expect(quoteCredits('lyrics').points).toBe(8); expect(quoteCredits('lyrics_extend').points).toBe(2);
-    for (const [kind, cents] of [['extend', 95], ['region_edit', 95], ['remix', 150], ['track', 60], ['transcribe', 150], ['recognize', 8], ['describe', 60]] as const) expect(quoteCredits(kind).points).toBe(pointsForCents(cents));
+    for (const [kind, cents] of [['extend', 95], ['region_edit', 95], ['track', 60], ['transcribe', 150], ['recognize', 8], ['describe', 60]] as const) expect(quoteCredits(kind).points).toBe(pointsForCents(cents));
     for (const [preset, cents] of [['band', 50], ['vocals', 150], ['detailed', 300]] as const) expect(quoteCredits('stem', undefined, { operation: 'stem', sourceTrackId: randomUUID(), title: '', preset }).points).toBe(pointsForCents(cents));
     expect(quoteCredits('crop').points).toBe(0); expect(quoteCredits('import').points).toBe(0);
     expect(toMurekaBody({ ...sampleInput(), model: 'mureka-9' }).model).toBe('mureka-9');
@@ -40,7 +43,7 @@ describe('transactional points ledger', () => {
   });
   afterEach(async () => { vi.restoreAllMocks(); store.close(); await rm(root, { recursive: true, force: true }); });
   function reserve(count = 1, tool?: ToolInput) {
-    const job = sampleJob({ kind: tool?.operation ?? 'song', tool, input: { ...sampleInput(), mode: 'lyrics', lyrics: '示例歌词', count } });
+    const job = sampleJob({ kind: tool?.operation ?? 'song', tool, input: { ...sampleInput(), mode: 'lyrics', lyrics: '示例歌词', model: 'mureka-9', count } });
     store.sqlite.transaction(() => { store.forUser(userId).createJob(job); credits.reserve(job.id); })(); return job;
   }
   it('gives ¥10 of points and prevents an extra paid job at zero balance', () => {
@@ -55,6 +58,20 @@ describe('transactional points ledger', () => {
     expect(credits.balance(userId)).toMatchObject({ balance: 967, held: 0 });
     credits.complete(job.id); credits.release(job.id); store.updateJob(job.id, { status: 'save_failed' });
     expect(credits.balance(userId).balance).toBe(967); expect(credits.charge(job.id)?.actual_cents).toBe(33);
+  });
+  it('reserves V9.5 prices for new work and remix even when the source used V9', () => {
+    const song = sampleJob();
+    store.sqlite.transaction(() => { store.forUser(userId).createJob(song); credits.reserve(song.id); })();
+    expect(credits.charge(song.id)).toMatchObject({ reserved: 30000, quoted_cents: 300 });
+    credits.complete(song.id, { id: 'new-song', status: 'succeeded', model: 'mureka-9.5', choices: [{ id: 'one', url: 'https://example.com/new.wav' }] });
+    expect(credits.balance(userId).balance).toBe(700);
+
+    const tool: ToolInput = { operation: 'remix', sourceTrackId: randomUUID(), title: '', lyrics: '', prompt: '柔和的爵士编曲' };
+    const remix = sampleJob({ kind: 'remix', tool, input: { ...sampleInput(), model: 'mureka-9' } });
+    store.sqlite.transaction(() => { store.forUser(userId).createJob(remix); credits.reserve(remix.id); })();
+    expect(credits.charge(remix.id)).toMatchObject({ reserved: 30000, quoted_cents: 300 });
+    credits.complete(remix.id, { id: 'new-remix', status: 'succeeded', model: 'mureka-9.5', choices: [{ id: 'one', url: 'https://example.com/remix.wav' }] });
+    expect(credits.balance(userId).balance).toBe(400);
   });
   it('retains ambiguous charges for admin review and clamps expensive actual settlement at zero', () => {
     const job = reserve(); credits.review(job.id); store.updateJob(job.id, { status: 'failed' });

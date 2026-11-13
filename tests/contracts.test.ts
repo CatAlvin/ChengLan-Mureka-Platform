@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { emptyDraft, generationSchema, toMurekaBody } from '../packages/shared/src/index.js';
+import { creationModel, emptyDraft, generationSchema, toMurekaBody } from '../packages/shared/src/index.js';
 import { publicAddress, validateMediaUrl } from '../apps/server/src/media.js';
 import { songTaskSchema, errorText } from '../apps/server/src/provider.js';
 
@@ -11,12 +11,14 @@ describe('Mureka request contract', () => {
   });
   it('maps easy, custom lyrics and instrumental without unsupported controls', () => {
     const easy = toMurekaBody({ ...emptyDraft('easy'), prompt: '夏天', styles: ['folk'] });
-    expect(easy).toEqual({ model: 'mureka-9', n: 1, prompt: '夏天；中文歌词', stream: false, styles: ['folk'] });
+    expect(easy).toEqual({ model: 'mureka-9.5', n: 1, prompt: '夏天；中文歌词', stream: false, styles: ['folk'] });
     const instrumental = toMurekaBody({ ...emptyDraft('instrumental'), prompt: '雨夜', styles: ['ambient'], gender: 'female' });
-    expect(instrumental).toEqual({ model: 'mureka-9', n: 1, prompt: '雨夜；ambient', stream: false });
+    expect(instrumental).toEqual({ model: 'mureka-9.5', n: 1, prompt: '雨夜；ambient', stream: false });
+    expect(generationSchema.safeParse({ ...emptyDraft('lyrics'), model: 'mureka-9.5', lyrics: '海风' }).success).toBe(true);
     const custom = { ...emptyDraft('lyrics'), lyrics: '[Verse]\n海风', gender: 'female' as const };
     expect(generationSchema.safeParse(custom).success).toBe(true);
     expect(toMurekaBody(custom)).toHaveProperty('gender', 'female');
+    expect(creationModel({ ...custom, model: 'mureka-9.5', source: { assetId: '123', kind: 'melody', start: 0, end: 5000 } })).toBe('mureka-8');
     expect(generationSchema.safeParse({ ...custom, lyrics: '歌'.repeat(5001) }).success).toBe(false);
   });
   it('recognizes reviewing and the provider spelling timeouted', () => {

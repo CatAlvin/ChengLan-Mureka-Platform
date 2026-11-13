@@ -35,8 +35,8 @@ const withSource = (mode: CreativeInput['mode'] = 'lyrics', kind: 'reference' | 
 describe('reference and melody contracts', () => {
   it('uses the upload field for each mode without mutually exclusive prompt fields', () => {
     expect(toMurekaBody(withSource('easy'), 'asset')).toMatchObject({ reference_id: 'asset', prompt: expect.any(String), styles: ['folk'] });
-    expect(toMurekaBody(withSource('instrumental'), 'asset')).toEqual({ model: 'mureka-9', n: 1, stream: false, instrumental_id: 'asset' });
-    expect(toMurekaBody(withSource(), 'asset')).toEqual({ model: 'mureka-9', n: 1, stream: false, reference_id: 'asset', lyrics: '歌唱明天', gender: 'female' });
+    expect(toMurekaBody(withSource('instrumental'), 'asset')).toEqual({ model: 'mureka-9.5', n: 1, stream: false, instrumental_id: 'asset' });
+    expect(toMurekaBody(withSource(), 'asset')).toEqual({ model: 'mureka-9.5', n: 1, stream: false, reference_id: 'asset', lyrics: '歌唱明天', gender: 'female' });
     expect(toMurekaBody(withSource('lyrics', 'melody'), 'asset')).toEqual({ model: 'mureka-8', n: 1, stream: false, melody_id: 'asset', lyrics: '歌唱明天' });
     expect(() => toMurekaBody(withSource())).toThrow();
     const instrumental = { ...withSource('instrumental'), prompt: '' }; expect(generationSchema.safeParse(instrumental).success).toBe(true);

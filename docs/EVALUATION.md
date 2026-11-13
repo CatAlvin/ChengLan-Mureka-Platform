@@ -1,6 +1,6 @@
 # Evaluation record
 
-**Checked on 9 October 2026 (Asia/Shanghai)** against this public snapshot. Local verification used Node.js 24.11.1, pnpm 11.25.0 and FFmpeg `N-118038-g8629306627-20241210` on Windows. The GitHub workflow runs the same lint, build, test and evaluation commands on Linux.
+**Checked on 13 November 2026 (Asia/Shanghai)** against this public snapshot. Local verification used Node.js 24.11.1 and FFmpeg `N-118038-g8629306627-20241210` on Windows. The repository pins pnpm 11.25.0; the GitHub workflow runs lint, build, test and evaluation commands on Linux.
 
 ## Reproduce
 
@@ -12,7 +12,7 @@ pnpm test
 pnpm eval
 ```
 
-`pnpm test` reported **13/13 test files and 128/128 tests passed**. It covers authenticated API and media access, registration approval, wallet settlement, source preparation, job recovery, save retries, crop operations, audio format handling, uploads and backup/restore. The suite uses a local SQLite database and a deterministic provider fixture.
+The regression suite reported **13/13 test files and 129/129 tests passed**. It covers authenticated API and media access, registration approval, wallet settlement, V9.5 request and credit mapping, source preparation, job recovery, save retries, crop operations, audio format handling, uploads and backup/restore. The suite uses a local SQLite database and a deterministic provider fixture.
 
 ## Focused scenarios
 

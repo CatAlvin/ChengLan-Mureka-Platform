@@ -10,7 +10,7 @@ import { Modal } from './modal';
 import { SourcePicker } from './source-picker';
 import { CollectionSelect, CollectionManager } from './library-tools';
 import { api, ApiError, saveDraft, storageKey } from '../lib/api';
-import { buildPrompt, draftSchema, emptyDraft, generationSchema, moods, styles, type CreativeInput, type Job, type Mode, type Snapshot } from '../../../../packages/shared/src/index';
+import { buildPrompt, creationModel, draftSchema, emptyDraft, generationSchema, moods, styles, type CreativeInput, type Job, type Mode, type Snapshot } from '../../../../packages/shared/src/index';
 
 type DraftRecord = { mode: string; input: CreativeInput; updatedAt: number };
 type PendingSubmission = { submissionId: string; input: CreativeInput; endpoint: string };
@@ -26,6 +26,7 @@ export function CreateForm({ mode, drafts, preset, snapshot, onCreated }: { mode
   const initial = preset || (local && local.updatedAt > (server?.updatedAt || 0) ? local.input : server?.input) || emptyDraft(mode);
   const { register, control, getValues, setValue, watch, setError, clearErrors, reset, setFocus, formState: { errors } } = useForm<CreativeInput>({ defaultValues: initial });
   const values = useWatch({ control }) as CreativeInput;
+  const model = creationModel(values);
   const client = useQueryClient();
   const [saved, setSaved] = useState<'saved' | 'saving' | 'local'>('saved');
   const [submitting, setSubmitting] = useState(false);
@@ -158,15 +159,15 @@ export function CreateForm({ mode, drafts, preset, snapshot, onCreated }: { mode
     <details className="advanced-settings" ref={advanced}><summary>更多创作设置 <CaretDownIcon /></summary><div className="advanced-content">
       <label>作品名称 <span className="optional">选填</span><input {...register('title')} placeholder="留空也没关系，之后可以改名" maxLength={80} /></label>
       <div className="form-two-columns">{mode !== 'instrumental' && <label>歌词语言<select {...register('language')}><option>中文</option><option>英文</option><option>日语</option><option>韩语</option></select></label>}{mode === 'lyrics' && <label>人声倾向<select disabled={values.source?.kind === 'melody'} {...register('gender')}><option value="auto">交给 AI</option><option value="female">女声</option><option value="male">男声</option></select></label>}</div>
-      <p className="field-help">{values.source?.kind === 'melody' ? '哼唱创作使用 Mureka 8，声音倾向随旋律素材决定。' : '使用 Mureka 自动推荐模型。AI 会尽量遵循你的创作偏好。'}</p>
+      <p className="field-help">{values.source?.kind === 'melody' ? '哼唱创作使用 Mureka V8，声音倾向随旋律素材决定。' : '默认使用 Mureka V9.5，也可以在下方选择 V9 或 V8。'}</p>
     </div></details>
     <div className="collection-controls"><CollectionSelect collections={snapshot?.collections} value={values.collectionId} disabled={submitting || !!pending} onChange={id => setValue('collectionId', id, { shouldDirty: true })} /><CollectionManager collections={snapshot?.collections} onCreated={id => setValue('collectionId', id, { shouldDirty: true })} /></div>
     {errors.collectionId && <p className="field-error">{errors.collectionId.message}</p>}
-    <label className="model-select">创作模型<select {...register('model')} value={values.source?.kind === 'melody' ? 'mureka-8' : values.model || 'mureka-9'} disabled={values.source?.kind === 'melody'}><option value="mureka-9">Mureka V9</option><option value="mureka-8">Mureka V8</option></select></label>
-    {values.source?.kind === 'melody' && <p className="field-help">哼唱旋律引导使用 V8，费用相同。</p>}
-    <CostHint quote={quoteCredits(mode === 'instrumental' ? 'instrumental' : 'song', {mode, count: values.count || 1})} balance={snapshot?.credits} />
+    <label className="model-select">创作模型<select {...register('model')} value={model} disabled={values.source?.kind === 'melody'}><option value="mureka-9.5">Mureka V9.5 · 默认</option><option value="mureka-9">Mureka V9</option><option value="mureka-8">Mureka V8</option></select></label>
+    {values.source?.kind === 'melody' && <p className="field-help">哼唱旋律引导使用 V8，按 V8 价格计费。</p>}
+    <CostHint quote={quoteCredits(mode === 'instrumental' ? 'instrumental' : 'song', {mode, count: values.count || 1}, undefined, model)} balance={snapshot?.credits} />
     <div className="form-footer"><div className="generation-options"><label htmlFor="count">本次生成</label><select id="count" {...register('count', { valueAsNumber: true })}><option value={1}>1 首作品</option><option value={2}>2 首作品</option><option value={3}>3 首作品</option></select><span className="save-indicator" role="status">{saved === 'saving' ? <CircleNotchIcon className="spin" /> : saved === 'saved' ? <CheckCircleIcon /> : <FloppyDiskIcon />}{saved === 'saving' ? '保存中' : saved === 'saved' ? '草稿已保存' : '已留在此浏览器'}</span></div>
-      <Button className="generate-button" type="submit" disabled={submitting || !snapshot?.account.configured || !pending && !canUseCredits(snapshot?.credits, quoteCredits(mode === 'instrumental' ? 'instrumental' : 'song', { mode, count: values.count || 1 }))}>{submitting ? <CircleNotchIcon className="spin" /> : <SparkleIcon weight="fill" />} {pending ? '确认上次提交' : `开始创作 · ${values.count || 1} 首`} <ArrowRightIcon /></Button>
+      <Button className="generate-button" type="submit" disabled={submitting || !snapshot?.account.configured || !pending && !canUseCredits(snapshot?.credits, quoteCredits(mode === 'instrumental' ? 'instrumental' : 'song', { mode, count: values.count || 1 }, undefined, model))}>{submitting ? <CircleNotchIcon className="spin" /> : <SparkleIcon weight="fill" />} {pending ? '确认上次提交' : `开始创作 · ${values.count || 1} 首`} <ArrowRightIcon /></Button>
       <p className="cost-note">按生成数量计费，实际费用以 Mureka 账单为准</p>
       {snapshot?.account.configured && !snapshot.account.connected && <p className="field-help">当前连接未就绪，提交后会保留在创作队列。</p>}
       {!snapshot?.account.configured && <p className="field-help">正在检测创作服务，稍后即可开始创作。</p>}

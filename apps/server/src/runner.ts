@@ -71,7 +71,7 @@ export class Runner {
           // Preserve supplied lyrics even if the provider omits its transcript, clearly
           // labeling them as a reference instead of presenting a partial verse as the song.
           const tool = job.tool;
-          const reference = tool?.operation === 'track' ? (tool.generateType === 'Vocals' ? tool.lyrics : '') : tool?.operation === 'remix' ? `歌词参考（以实际演唱为准）\n\n${tool.lyrics}` : tool && (tool.operation === 'extend' || tool.operation === 'region_edit')
+          const reference = tool?.operation === 'track' ? (tool.generateType === 'Vocals' ? tool.lyrics : '') : tool?.operation === 'remix' ? (tool.lyrics ? `歌词参考（以实际演唱为准）\n\n${tool.lyrics}` : '') : tool && (tool.operation === 'extend' || tool.operation === 'region_edit')
             ? `歌词参考（以实际演唱为准）\n\n[原作品歌词]\n${this.store.getTrack(tool.sourceTrackId)?.lyrics || '纯音乐或暂无歌词'}\n\n[${tool.operation === 'extend' ? '续写歌词' : '局部重唱歌词'}]\n${tool.lyrics}`
             : job.input.lyrics;
           const lyrics = tool?.operation === 'track' && tool.generateType !== 'Vocals' ? '' : lyricsText(choice.lyrics_sections, reference);
@@ -135,7 +135,6 @@ export class Runner {
           if (!source || source.ownerId !== job.ownerId || source.deletedAt || !source.localFile || source.saveStatus !== 'saved') throw new ProviderError('原作品尚未保存完整或已移入回收站，请恢复后再试。', 400);
           const rangeError = toolRangeError(job.tool, source.duration);
           if (rangeError) { this.rejectUnpaid(job.id, rangeError); return; }
-          if (job.tool.operation === 'remix' && source.mode === 'instrumental') { this.rejectUnpaid(job.id, '整首重制需要含人声的歌曲，纯音乐暂不支持。'); return; }
           if (job.tool.operation === 'lyrics_extend') {
             const result = await this.provider.extendLyrics(job.tool.lyrics);
             this.completePaid(job.id, { status: 'succeeded', result });

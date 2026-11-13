@@ -34,7 +34,7 @@ function Registration() {
   const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [done, setDone] = useState(false);
   return <main className="auth-page"><section className="auth-card registration-card"><Brand /><h1>{done ? '申请已送达' : '申请你的音乐空间'}</h1>
-    {done ? <div role="status" className="notice">管理员审批通过后，使用刚才的用户名与密码登录。请联系管理员说明使用需求。</div> : <><p>填写用户名与密码，审批通过即可创作。每周有价值 ¥10 的 1000 点额度，V8 / V9 均可使用。</p>
+    {done ? <div role="status" className="notice">管理员审批通过后，使用刚才的用户名与密码登录。请联系管理员说明使用需求。</div> : <><p>填写用户名与密码，审批通过即可创作。每周有价值 ¥10 的 1000 点额度，可选择 V9.5、V9 或 V8。</p>
       <p className="registration-capacity" role="status">{status.data ? `待审批 ${status.data.pending} / ${status.data.limit} 条${status.data.available ? '' : ' · 队列已满，请稍后再来'}` : status.error ? '暂时无法读取申请名额，请稍后重试。' : '正在检查申请名额…'}</p>
       <form onSubmit={async e => { e.preventDefault(); if (busy) return; if (password !== confirm) { setError('两次密码不一致。'); return; } setBusy(true); setError(''); try { await api('/api/auth/register', { method: 'POST', body: { username, password } }); setPassword(''); setConfirm(''); setDone(true); } catch (failure) { setError((failure as Error).message); void status.refetch(); } finally { setBusy(false); } }}>
         <label>用户名<input required autoComplete="username" autoCapitalize="none" spellCheck={false} pattern="[a-zA-Z0-9][a-zA-Z0-9_.-]{2,31}" maxLength={32} placeholder="3–32 位字母、数字或 _ . -" value={username} onChange={e => setUsername(e.target.value)} /></label>

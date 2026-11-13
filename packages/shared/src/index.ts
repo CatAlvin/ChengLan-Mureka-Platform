@@ -13,11 +13,12 @@ export const moods = ['温暖治愈', '轻松愉快', '安静舒缓', '充满力
 export const modeSchema = z.enum(['easy', 'lyrics', 'instrumental']);
 export type Mode = z.infer<typeof modeSchema>;
 export const modeNames: Record<Mode, string> = { easy: '一句话写歌', lyrics: '用我的歌词', instrumental: '做段纯音乐' };
+export const DEFAULT_MUREKA_MODEL = 'mureka-9.5';
 export const sourceSchema = z.object({ assetId: z.string().uuid(), kind: z.enum(['reference', 'melody']), start: z.number().int().nonnegative(), end: z.number().int().positive() });
 export type CreativeSource = z.infer<typeof sourceSchema>;
 export const draftSchema = z.object({
   mode: modeSchema,
-  model: z.enum(['mureka-8', 'mureka-9']).optional(),
+  model: z.enum(['mureka-8', 'mureka-9', 'mureka-9.5']).optional(),
   title: z.string().max(80).default(''),
   prompt: z.string().max(3000).default(''),
   lyrics: z.string().max(8000).default(''),
@@ -30,6 +31,7 @@ export const draftSchema = z.object({
 });
 export type CreativeInput = z.infer<typeof draftSchema>;
 export const emptyDraft = (mode: Mode): CreativeInput => draftSchema.parse({ mode });
+export const creationModel = (input: Pick<CreativeInput, 'model' | 'source'>) => input.source?.kind === 'melody' ? 'mureka-8' : input.model || DEFAULT_MUREKA_MODEL;
 
 export function buildPrompt(input: CreativeInput): string {
   const parts = [input.prompt.trim()];
@@ -61,7 +63,7 @@ export const generationSchema = draftSchema.superRefine((input, ctx) => {
 });
 
 export function toMurekaBody(input: CreativeInput, uploadId?: string): Record<string, unknown> {
-  const base = { model: input.model || 'mureka-9', n: input.count, prompt: buildPrompt(input), stream: false };
+  const base = { model: creationModel(input), n: input.count, prompt: buildPrompt(input), stream: false };
   if (input.source) {
     if (!uploadId) throw new Error('创作素材尚未上传');
     if (input.mode === 'easy') return { ...base, ...(input.styles.length ? { styles: input.styles } : {}), reference_id: uploadId };
@@ -93,7 +95,7 @@ export const toolInputSchema = z.discriminatedUnion('operation', [
   z.object({ ...toolBase, operation: z.literal('crop'), start: z.number().int().nonnegative(), end: z.number().int().positive() }),
   z.object({ ...toolBase, operation: z.literal('extend'), lyrics: newLyrics, at: z.number().int().nonnegative(), direction: z.enum(['tail', 'head']) }),
   z.object({ ...toolBase, operation: z.literal('region_edit'), lyrics: newLyrics, start: z.number().int().nonnegative(), end: z.number().int().positive() }),
-  z.object({ ...toolBase, operation: z.literal('remix'), lyrics: z.string().trim().min(1, '请填写整首新歌词').max(5000, '歌词请控制在 5000 字以内'), prompt: z.string().trim().min(1, '请描述重制后的曲风和演唱方式').max(1024, '重制描述请控制在 1024 字以内') }),
+  z.object({ ...toolBase, operation: z.literal('remix'), lyrics: z.string().trim().max(5000, '歌词请控制在 5000 字以内').default(''), prompt: z.string().trim().min(1, '请描述重制后的曲风和演唱方式').max(1024, '重制描述请控制在 1024 字以内') }),
   z.object({ ...toolBase, operation: z.literal('stem'), preset: z.enum(['vocals', 'band', 'detailed']) }),
   z.object({ ...toolBase, operation: z.literal('track'), generateType: z.enum(Object.keys(trackTypes) as [keyof typeof trackTypes, ...(keyof typeof trackTypes)[]]), prompt: z.string().trim().min(1, '请描述希望生成的声音').max(1024), lyrics: z.string().trim().max(5000).default(''), vocalGender: z.enum(['auto', 'female', 'male']).default('auto'), start: z.number().int().nonnegative(), end: z.number().int().positive() }).refine(input => input.generateType !== 'Vocals' || !!input.lyrics, { path: ['lyrics'], message: '生成人声时请填写歌词' }),
   z.object({ ...toolBase, operation: z.literal('transcribe'), title: z.string().trim().max(50, '乐谱标题请控制在 50 字以内').default('') }),
@@ -110,7 +112,7 @@ export function toolRangeError(input: ToolInput, duration: number): string | nul
   // Application safeguard: retain some original audio for a local edit. Full
   // replacements belong to remix, even if the upstream accepts their timestamps.
   if (input.operation === 'region_edit' && duration - (input.end - input.start) < 3000) return '局部重唱需要保留至少 3 秒原曲。替换整首歌词请使用“整首重制”。';
-  if (input.operation === 'remix' && (duration < 10000 || duration > 350000)) return '整首重制支持 10–350 秒的歌曲，请先裁剪到这个范围';
+  if (input.operation === 'remix' && (duration < 10000 || duration > 480000)) return '整首重制支持 10–480 秒的音频，请先裁剪到这个范围';
   if (input.operation === 'track' && (input.end <= input.start || input.end > duration)) return '请选择原曲时长内的有效片段';
   if (input.operation === 'transcribe' && (duration < 10000 || duration > 600000)) return '音乐转谱支持 10 秒至 10 分钟的音频，请先选择合适作品或裁剪';
   return null;
@@ -118,7 +120,7 @@ export function toolRangeError(input: ToolInput, duration: number): string | nul
 export function toMurekaToolBody(input: ToolInput, uploadId: string): Record<string, unknown> {
   if (input.operation === 'extend') return { upload_audio_id: uploadId, lyrics: input.lyrics, extend_at: input.at, extend_type: input.direction, model: 'mureka-8' };
   if (input.operation === 'region_edit') return { upload_audio_id: uploadId, lyrics: input.lyrics, edit_start: input.start, edit_end: input.end };
-  if (input.operation === 'remix') return { upload_audio_id: uploadId, lyrics: input.lyrics, prompt: input.prompt, n: 1 };
+  if (input.operation === 'remix') return { upload_audio_id: uploadId, model: DEFAULT_MUREKA_MODEL, ...(input.lyrics ? { lyrics: input.lyrics } : {}), prompt: input.prompt, n: 1 };
   if (input.operation === 'track') return { upload_audio_id: uploadId, generate_type: input.generateType, prompt: input.prompt, generate_start: input.start, generate_end: input.end, ...(input.generateType === 'Vocals' ? { lyrics: input.lyrics, ...(input.vocalGender === 'auto' ? {} : { vocal_gender: input.vocalGender }) } : {}) };
   throw new Error('此操作不生成歌曲');
 }

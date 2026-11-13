@@ -89,7 +89,7 @@ export function registerAuth(app: FastifyInstance, store: Store, runner: Runner,
     if (request.user.mustChangePassword && !['/api/auth/password', '/api/auth/logout'].includes(url)) return reply.code(428).send({ message: '请先更换临时密码。' });
     if (url.startsWith('/api/admin/') && request.user.role !== 'admin') return reply.code(403).send({ message: '此功能仅管理员可用。' });
   });
-  app.get('/api/session', async (request, reply) => ({ app: 'chenglan-music', version: '0.7.2', user: request.user, csrfToken: request.authSession?.csrf || issue(reply, null), hosted: secure }));
+  app.get('/api/session', async (request, reply) => ({ app: 'chenglan-music', version: '0.7.3', user: request.user, csrfToken: request.authSession?.csrf || issue(reply, null), hosted: secure }));
   function registrationInfo() {
     const pending = (sql.prepare('SELECT count(*) n FROM registrations').get() as {n:number}).n;
     const limit = (sql.prepare("SELECT value FROM app_settings WHERE key='registration_limit'").get() as {value:number}).value;

@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-09",
+  "checkedAt": "2026-11-13",
   "timezone": "Asia/Shanghai",
   "environment": {
     "node": "24.11.1",
@@ -9,8 +9,8 @@
   "regression": {
     "testFiles": 13,
     "testFilesPassed": 13,
-    "tests": 128,
-    "testsPassed": 128
+    "tests": 129,
+    "testsPassed": 129
   },
   "focusedEvaluation": {
     "scope": "offline fixtures; no Mureka API calls",

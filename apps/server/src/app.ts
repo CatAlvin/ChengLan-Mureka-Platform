@@ -93,7 +93,6 @@ export async function buildApp(options: AppOptions) {
     if (source.saveStatus !== 'saved' || !source.localFile) return reply.code(409).send({ message: '请等这首作品保存完成，再继续创作。' });
     const rangeError = toolRangeError(tool, source.duration);
     if (rangeError) return reply.code(400).send({ message: rangeError });
-    if (tool.operation === 'remix' && source.mode === 'instrumental') return reply.code(400).send({ message: '整首重制需要含人声的歌曲，纯音乐暂不支持。' });
     const original = store.getJob(source.jobId)!;
     const input = { ...original.input, title: tool.title || `${source.title.slice(0, 60)} · ${toolNames[tool.operation]}`, count: 1, ...(tool.operation === 'track' ? { mode: tool.generateType === 'Vocals' ? 'lyrics' as const : 'instrumental' as const, lyrics: tool.generateType === 'Vocals' ? tool.lyrics : '', source: null } : {}) };
     const job: Job = { id: randomUUID(), submissionId, kind: tool.operation, tool, input, status: 'local_queued', providerId: null, error: null, traceId: null, result: null, createdAt: Date.now(), updatedAt: Date.now(), pollAfter: 0 };
@@ -215,7 +214,7 @@ export async function buildApp(options: AppOptions) {
       return reply.type('application/zip').header('Content-Disposition', 'attachment; filename="chenglan-backup.zip"').send(Buffer.from(zip));
     } finally { await rm(folder, { recursive: true, force: true }); }
   });
-  app.get('/api/info', async request => ({ version: '0.7.2', storageDir: request.user!.role === 'admin' ? storageDir : '个人作品空间', dataDir: request.user!.role === 'admin' ? dataDir : '个人创作数据', provider: 'Mureka 中国区', sharedAccess: true }));
+  app.get('/api/info', async request => ({ version: '0.7.3', storageDir: request.user!.role === 'admin' ? storageDir : '个人作品空间', dataDir: request.user!.role === 'admin' ? dataDir : '个人创作数据', provider: 'Mureka 中国区', sharedAccess: true }));
   app.post('/api/shutdown', async (_request, reply) => {
     await runner.stop();
     reply.send({ ok: true });

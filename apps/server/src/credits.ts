@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Store } from './db.js';
 import { LAST_USE_MAX_CENTS, pointsForCents, quoteCredits, WEEKLY_POINTS, type CreditBalance } from '../../../packages/shared/src/credits.js';
+import { creationModel, DEFAULT_MUREKA_MODEL } from '../../../packages/shared/src/index.js';
 import type { SongTask } from './provider.js';
 
 const WEEK = 7 * 86400000;
@@ -39,7 +40,7 @@ export class Credits {
     return this.sql.transaction(() => {
       if (this.charge(jobId)) return;
       const job = this.store.getJob(jobId)!;
-      const quote = quoteCredits(job.kind, job.input, job.tool ?? undefined, job.input.model || 'mureka-8');
+      const quote = quoteCredits(job.kind, job.input, job.tool ?? undefined, job.kind === 'remix' ? DEFAULT_MUREKA_MODEL : creationModel(job.input));
       if (!quote.points) return;
       const user = this.sql.prepare('SELECT role FROM users WHERE id=?').get(job.ownerId) as { role: string };
       const wallet = this.wallet(job.ownerId); const unlimited = user.role === 'admin';
@@ -83,7 +84,7 @@ export class Credits {
     let cents = charge.quoted_cents;
     if (task) {
       if (task.status !== 'succeeded') { this.review(jobId, '云端任务未成功，待核实是否收费'); return; }
-      const quote = quoteCredits(job.kind, job.input, job.tool ?? undefined, task.model || 'mureka-8', task.choices?.length ?? 0);
+      const quote = quoteCredits(job.kind, job.input, job.tool ?? undefined, task.model || (job.kind === 'remix' ? DEFAULT_MUREKA_MODEL : creationModel(job.input)), task.choices?.length ?? 0);
       cents = quote.cents;
     }
     if (charge.grace && cents !== null && cents > LAST_USE_MAX_CENTS) { this.review(jobId, '最后一次额度实际费用高于 3 元，需管理员核实'); return; }
